@@ -1,0 +1,1572 @@
+<!doctype html>
+<html lang="my"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#7f5af0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>ပျော်စရာဂိမ်း</title>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Noto+Sans+Myanmar:wght@400;600;800&display=swap">
+<style>
+/* Layout: one centered column. A menu of six game tiles; each game opens in the same column under a shared header with a back button. */
+:root {
+  --bg: #e6f2ff;
+  --surface: #ffffff;
+  --fg: #12313a;
+  --muted: #566f8c;
+  --card-back: #1f6f78;
+  --card-back-2: #2a8c96;
+  --accent: #ff7a4d;
+  --accent-fg: #ffffff;
+  --gold: #f2b705;
+  --ok: #2f9e6b;
+  --bad: #d9534f;
+  --line: #c9dcf0;
+  --hole: #b4cbe6;
+  --dot: #c4d9ee;
+  --font-display: 'Fredoka', 'Noto Sans Myanmar', 'Myanmar Text', 'Padauk', sans-serif;
+  --font-body: 'Noto Sans Myanmar', 'Myanmar Text', 'Padauk', system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e2227; --surface: #17343b; --fg: #e6f4f1; --muted: #8fb0b6;
+    --card-back: #2a8c96; --card-back-2: #1f6f78; --accent: #ff8a5f; --accent-fg: #1a0d07;
+    --gold: #f7c52f; --ok: #4cc58f; --bad: #ff7b76; --line: #25464e; --hole: #0a1a1e; --dot: #17343b;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e2227; --surface: #17343b; --fg: #e6f4f1; --muted: #8fb0b6;
+  --card-back: #2a8c96; --card-back-2: #1f6f78; --accent: #ff8a5f; --accent-fg: #1a0d07;
+  --gold: #f7c52f; --ok: #4cc58f; --bad: #ff7b76; --line: #25464e; --hole: #0a1a1e; --dot: #17343b;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background-color: var(--bg); background-image: radial-gradient(var(--dot) 1.6px, transparent 1.6px); background-size: 22px 22px;
+  color: var(--fg); font-family: var(--font-body); font-size: 16px; line-height: 1.5;
+  padding-block: 20px 32px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  -webkit-tap-highlight-color: transparent;
+}
+main { max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.head-btns { display: flex; gap: 8px; flex-shrink: 0; }
+h1 { font-family: var(--font-display); font-size: 1.45rem; line-height: 1.3; margin: 0; font-weight: 600; text-wrap: balance; min-width: 0; }
+button { font-family: inherit; }
+.icon-btn {
+  appearance: none; border: 2px solid var(--line); background: var(--surface); color: var(--fg);
+  font: inherit; font-size: 0.85rem; padding: 6px 12px; border-radius: 999px; cursor: pointer; min-height: 40px;
+}
+.icon-btn[aria-pressed="false"] { color: var(--muted); text-decoration: line-through; }
+button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+
+/* menu */
+nav#menu { display: flex; flex-direction: column; gap: 22px; }
+.grp { font-family: var(--font-display); font-size: 1.15rem; font-weight: 600; margin: 0 0 10px; line-height: 1.4; }
+.sub { margin: -6px 0 0; color: var(--muted); font-size: 0.95rem; }
+.menu { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.tile { appearance: none; border: 0; background: var(--tc); color: #12313a; border-radius: 22px; padding: 14px 10px 12px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; box-shadow: 0 5px 0 rgba(0,0,0,0.2); min-height: 150px; justify-content: center; touch-action: manipulation; }
+.tile:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,0.2); }
+.tile .big { width: 64px; height: 64px; border-radius: 50%; background: rgba(255,255,255,0.65); display: flex; align-items: center; justify-content: center; font-size: 2rem; line-height: 1; }
+.tile b { font-size: 1.02rem; line-height: 1.3; }
+.tile small { font-size: 0.76rem; line-height: 1.35; color: rgba(18,49,58,0.78); }
+header.ingame { background: var(--gc, var(--line)); color: #12313a; padding: 10px 12px; border-radius: 20px; }
+header.ingame h1 { font-size: 1.2rem; }
+
+/* shared */
+.levels { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.level {
+  appearance: none; border: 2px solid var(--line); background: var(--surface); color: var(--fg);
+  font: inherit; font-weight: 600; padding: 10px 6px; border-radius: 14px; cursor: pointer; min-height: 52px;
+  display: flex; flex-direction: column; align-items: center; line-height: 1.3;
+}
+.level small { font-weight: 400; font-size: 0.72rem; color: var(--muted); font-family: var(--font-display); }
+.level[aria-pressed="true"] { background: var(--card-back); border-color: var(--card-back); color: #fff; }
+.level[aria-pressed="true"] small { color: #d6f1f3; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.stat { background: var(--surface); border-radius: 14px; padding: 8px 10px; text-align: center; border-top: 4px solid var(--gc, var(--line)); }
+.stat b { display: block; font-family: var(--font-display); font-size: 1.4rem; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 0.75rem; color: var(--muted); }
+.status { text-align: center; font-weight: 600; margin: 0; min-height: 1.6em; }
+.best { text-align: center; color: var(--muted); font-size: 0.85rem; margin: 0; }
+.primary {
+  appearance: none; border: 0; background: var(--accent); color: var(--accent-fg); font: inherit; font-weight: 800;
+  padding: 14px 20px; border-radius: 16px; cursor: pointer; min-height: 52px; width: 100%; box-shadow: 0 4px 0 rgba(0,0,0,0.18);
+}
+.primary:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.18); }
+section { display: flex; flex-direction: column; gap: 14px; }
+
+/* memory */
+.board { display: grid; gap: 10px; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); perspective: 900px; }
+.card { appearance: none; border: 0; padding: 0; background: none; color: inherit; aspect-ratio: 1 / 1.12; position: relative; cursor: pointer; touch-action: manipulation; }
+.inner { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform 0.45s cubic-bezier(.3,1.3,.5,1); }
+.card.up .inner, .card.done .inner { transform: rotateY(180deg); }
+.face { position: absolute; inset: 0; border-radius: 16px; backface-visibility: hidden; -webkit-backface-visibility: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+.back {
+  background: radial-gradient(circle at 25% 25%, var(--card-back-2) 0 14%, transparent 15%), radial-gradient(circle at 75% 75%, var(--card-back-2) 0 14%, transparent 15%), var(--card-back);
+  box-shadow: 0 4px 0 rgba(0,0,0,0.18);
+}
+.back::after { content: "?"; font-family: var(--font-display); font-weight: 600; font-size: 1.8rem; color: rgba(255,255,255,0.85); }
+.front { background: var(--surface); transform: rotateY(180deg); border: 3px solid var(--line); }
+.card.done .front { border-color: var(--ok); }
+.emoji { font-size: clamp(1.8rem, 11vw, 3rem); line-height: 1.1; }
+.name { font-size: 0.78rem; color: var(--muted); line-height: 1.2; }
+.card.shake .inner { animation: shake 0.4s; }
+@keyframes shake { 0%,100% { transform: rotateY(180deg) } 25% { transform: rotateY(180deg) translateX(-5px) } 75% { transform: rotateY(180deg) translateX(5px) } }
+.card.done .inner { animation: pop 0.5s; }
+@keyframes pop { 0% { transform: rotateY(180deg) scale(1) } 50% { transform: rotateY(180deg) scale(1.12) } 100% { transform: rotateY(180deg) scale(1) } }
+
+/* whack */
+.holes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.hole { appearance: none; border: 0; aspect-ratio: 1; border-radius: 50%; background: var(--hole); position: relative; overflow: hidden; cursor: pointer; touch-action: manipulation; box-shadow: inset 0 8px 0 rgba(0,0,0,0.15); }
+.critter { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: clamp(2.2rem, 14vw, 3.6rem); transform: translateY(110%); transition: transform 0.12s ease-out; }
+.hole.up .critter { transform: none; }
+.hole.hit { background: var(--ok); }
+
+/* counting */
+.count-box { background: var(--surface); border-radius: 20px; padding: 16px; min-height: 180px; display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; justify-content: center; font-size: 2.4rem; line-height: 1.2; }
+.choices { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.choice { appearance: none; border: 3px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 18px; min-height: 72px; font-family: var(--font-display); font-size: 2rem; font-weight: 600; cursor: pointer; }
+.choice.right { background: var(--ok); border-color: var(--ok); color: #fff; }
+.choice.wrong { background: var(--bad); border-color: var(--bad); color: #fff; }
+
+/* tic-tac-toe */
+.ttt { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 360px; width: 100%; margin: 0 auto; }
+.cell { appearance: none; border: 0; background: var(--surface); border-radius: 16px; aspect-ratio: 1; font-family: var(--font-display); font-size: clamp(2.4rem, 16vw, 4rem); font-weight: 600; cursor: pointer; color: var(--fg); line-height: 1; }
+.cell.x { color: var(--accent); }
+.cell.o { color: var(--card-back); }
+.cell.win { background: var(--gold); color: #12313a; }
+
+/* number order */
+.numgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.num { appearance: none; border: 0; background: var(--surface); color: var(--fg); border-radius: 18px; aspect-ratio: 1.3; font-family: var(--font-display); font-size: 2rem; font-weight: 600; cursor: pointer; touch-action: manipulation; box-shadow: 0 4px 0 var(--line); }
+.num.done { background: var(--ok); color: #fff; box-shadow: none; }
+.num.bad { background: var(--bad); color: #fff; }
+
+/* odd one out */
+.oddgrid { display: grid; grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr)); gap: 8px; }
+.oc { appearance: none; border: 0; background: var(--surface); border-radius: 14px; aspect-ratio: 1; font-size: clamp(1.6rem, 9vw, 2.6rem); line-height: 1; cursor: pointer; touch-action: manipulation; padding: 0; }
+
+/* math, rps, compare */
+.q { background: var(--surface); border-radius: 20px; padding: 28px 16px; text-align: center; font-family: var(--font-display); font-size: 3rem; font-weight: 600; line-height: 1.2; }
+.choice small { display: block; font-family: var(--font-body); font-size: 0.75rem; font-weight: 400; line-height: 1.3; }
+.choice.big { min-height: 140px; font-size: 3.4rem; }
+.arena { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.hand { background: var(--surface); border-radius: 20px; padding: 12px; text-align: center; }
+.hand div { font-size: 4rem; line-height: 1.2; }
+.hand span { font-size: 0.8rem; color: var(--muted); }
+
+/* more games */
+.cv { width: 100%; max-width: 360px; aspect-ratio: 1; border-radius: 16px; margin: 0 auto; display: block; touch-action: none; background: var(--surface); border: 3px solid var(--line); }
+.dpad { display: grid; grid-template-columns: repeat(3, 64px); gap: 8px; justify-content: center; }
+.dpad button { appearance: none; border: 0; background: var(--surface); color: var(--fg); border-radius: 16px; height: 56px; font-size: 1.6rem; cursor: pointer; touch-action: manipulation; box-shadow: 0 4px 0 var(--line); }
+.sgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; max-width: 360px; width: 100%; margin: 0 auto; }
+.st { appearance: none; border: 0; border-radius: 16px; aspect-ratio: 1; background: var(--card-back); color: #fff; font-family: var(--font-display); font-size: 2.4rem; font-weight: 600; cursor: pointer; touch-action: manipulation; }
+.st.blank { background: var(--hole); cursor: default; }
+.react { appearance: none; border: 0; border-radius: 24px; min-height: 280px; width: 100%; color: #fff; font: inherit; font-size: 1.4rem; font-weight: 800; cursor: pointer; background: var(--card-back); touch-action: manipulation; padding: 16px; white-space: pre-line; line-height: 1.6; }
+.react.wait { background: #d9534f; }
+.react.go { background: #2f9e6b; }
+.tgrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.tb { appearance: none; border: 0; background: var(--surface); border-radius: 14px; aspect-ratio: 1; font-size: clamp(1.6rem, 9vw, 2.4rem); cursor: pointer; padding: 0; touch-action: manipulation; box-shadow: 0 3px 0 var(--line); }
+.tb.open { background: var(--line); cursor: default; box-shadow: none; }
+.dice { font-size: 3.4rem; line-height: 1.2; letter-spacing: 2px; }
+.q.small { font-size: 2rem; overflow-wrap: anywhere; padding: 24px 12px; }
+
+/* even more games */
+.lc { appearance: none; border: 0; border-radius: 16px; aspect-ratio: 1; background: var(--hole); cursor: pointer; touch-action: manipulation; }
+.lc.on { background: var(--gold); box-shadow: 0 0 18px var(--gold); }
+.field { position: relative; height: 420px; overflow: hidden; border-radius: 20px; background: var(--surface); touch-action: none; }
+.fruit { position: absolute; top: 0; font-size: 2rem; line-height: 1; }
+.basket { position: absolute; bottom: 6px; font-size: 3rem; line-height: 1; transform: translateX(-50%); }
+.sw { min-height: 96px; border-width: 5px; }
+.choice.txt { font-size: 1.35rem; font-family: var(--font-body); font-weight: 600; }
+.q.huge { font-size: 5rem; padding: 16px; }
+
+/* balloons */
+.sky { position: relative; height: 440px; overflow: hidden; border-radius: 20px; background: var(--surface); touch-action: manipulation; }
+.balloon { appearance: none; border: 0; position: absolute; bottom: -90px; width: 58px; height: 70px; border-radius: 50% 50% 50% 50% / 58% 58% 42% 42%; cursor: pointer; animation: rise linear forwards; padding: 0; }
+.balloon::after { content: ""; position: absolute; left: 50%; top: 100%; width: 2px; height: 22px; background: var(--muted); }
+.balloon::before { content: ""; position: absolute; left: 14px; top: 12px; width: 12px; height: 18px; border-radius: 50%; background: rgba(255,255,255,0.45); }
+@keyframes rise { from { transform: translateY(0) } to { transform: translateY(-560px) } }
+
+/* result dialog */
+.win { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(8, 24, 28, 0.6); padding: 16px; z-index: 20; }
+.win-box { background: var(--surface); color: var(--fg); border-radius: 24px; padding: 24px 20px; text-align: center; max-width: 340px; width: 100%; display: flex; flex-direction: column; gap: 10px; animation: rise2 0.5s cubic-bezier(.3,1.4,.5,1); }
+@keyframes rise2 { from { transform: translateY(30px) scale(0.9); opacity: 0 } to { transform: none; opacity: 1 } }
+.win-box h2 { font-family: var(--font-display); margin: 0; font-size: 1.6rem; line-height: 1.3; }
+.stars { font-size: 2.4rem; letter-spacing: 6px; color: var(--gold); line-height: 1.2; }
+.stars .off { color: var(--line); }
+.win-box p { margin: 0; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) {
+  .inner, .pad, .critter { transition-duration: 0.01s; }
+  .card.shake .inner, .card.done .inner, .win-box { animation: none; }
+}
+</style>
+
+<style>
+[hidden]:not([hidden=until-found i]){display:none!important}
+/* ===== Glass theme ===== */
+:root:root:root{
+  --bg:#7f5af0; --surface:rgba(46,30,110,.94); --fg:#ffffff; --muted:rgba(255,255,255,.82);
+  --card-back:#6a4fd8; --card-back-2:#8a74ee; --accent:#ffb86b; --accent-fg:#2b1650;
+  --gold:#ffd54a; --ok:#2fbf84; --bad:#e8605c; --line:rgba(255,255,255,.45);
+  --hole:rgba(20,10,60,.35); --dot:transparent; --glass:rgba(255,255,255,.2); color-scheme:dark;
+}
+html{background:#2cb1bc}
+body{background:linear-gradient(150deg,#7f5af0 0%,#2cb1bc 60%,#ffb86b 100%) fixed;background-image:linear-gradient(150deg,#7f5af0 0%,#2cb1bc 60%,#ffb86b 100%);min-height:100vh;color:#fff}
+.tile,.stat,.level,.icon-btn,.count-box,.q,.hand,.choice,.cell,.num,.oc,.tb,.dpad button,.field,.sky,.cv,.front,.win-box{
+  background:var(--glass);border:1px solid rgba(255,255,255,.45);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.tile{color:#fff;border-radius:20px;box-shadow:0 8px 24px rgba(30,10,80,.25);min-height:140px}
+.tile:active{transform:scale(.97);box-shadow:0 3px 10px rgba(30,10,80,.25)}
+.tile .big{background:color-mix(in srgb,var(--tc) 75%,transparent);box-shadow:0 0 0 3px rgba(255,255,255,.35)}
+.tile small{color:rgba(255,255,255,.85)}
+.grp,h1,.sub{text-shadow:0 1px 6px rgba(30,10,80,.35)}
+header.ingame{background:rgba(255,255,255,.25);color:#fff;border:1px solid rgba(255,255,255,.45);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.stat{border-top:4px solid var(--gc,rgba(255,255,255,.6))}
+.level[aria-pressed="true"]{background:rgba(255,255,255,.85);color:#3a1d8a;border-color:#fff}
+.level[aria-pressed="true"] small{color:#5a3cb8}
+.icon-btn[aria-pressed="false"]{color:rgba(255,255,255,.7)}
+.choice.right,.num.done,.hole.hit{background:var(--ok);border-color:var(--ok)}
+.choice.wrong,.num.bad{background:var(--bad);border-color:var(--bad)}
+.cell.win{background:var(--gold);color:#2b1650}
+.lc.on{background:var(--gold)}
+.tb.open{background:rgba(0,0,0,.25)}
+.num,.tb,.dpad button{box-shadow:0 4px 0 rgba(255,255,255,.18)}
+.cell.x{color:var(--accent)}.cell.o{color:#bfe9ff}
+.front{background:rgba(255,255,255,.28)}.card.done .front{border-color:var(--ok)}
+.primary{box-shadow:0 6px 16px rgba(30,10,80,.3)}
+.win{background:rgba(25,10,70,.55);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.win-box{background:rgba(255,255,255,.22)}
+.balloon::after{background:rgba(255,255,255,.7)}
+@media (prefers-reduced-transparency:reduce){.tile,.stat,.level,.icon-btn,.front,.win-box,header.ingame{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(46,30,110,.9)}}
+</style>
+</head>
+<body>
+<main>
+  <header id="top">
+    <h1 id="title">ပျော်စရာဂိမ်း</h1>
+    <div class="head-btns">
+      <button class="icon-btn" id="back" hidden>← ပြန်</button>
+      <button class="icon-btn" id="sound" aria-pressed="true">အသံ</button>
+    </div>
+  </header>
+
+  <p class="sub" id="sub">ကြိုက်တာ ရွေးပြီး ဆော့လိုက်ပါ — ဂိမ်း ၂၂ ခု</p>
+
+  <nav id="menu" aria-label="ဂိမ်းရွေးရန်">
+    <div>
+      <h2 class="grp">🧠 ဦးနှောက်ကစား</h2>
+      <div class="menu">
+        <button class="tile" data-game="memory" data-color="#ff9b7a" data-emoji="🃏" style="--tc:#ff9b7a"><span class="big">🃏</span><b>ကတ်တွဲရှာ</b><small>တူတဲ့ တိရစ္ဆာန်ကတ်တွေ ရှာပါ</small></button>
+        <button class="tile" data-game="slide" data-color="#ffd24d" data-emoji="🧩" style="--tc:#ffd24d"><span class="big">🧩</span><b>ဂဏန်းပဟေဠိ</b><small>ဂဏန်းတွေကို အစဉ်လိုက် စီပါ</small></button>
+        <button class="tile" data-game="odd" data-color="#7ddc9b" data-emoji="🔍" style="--tc:#7ddc9b"><span class="big">🔍</span><b>မတူတာရှာ</b><small>တခြားနဲ့ မတူတာကို ရှာပါ</small></button>
+        <button class="tile" data-game="treasure" data-color="#7cc4ff" data-emoji="💎" style="--tc:#7cc4ff"><span class="big">💎</span><b>ရတနာရှာ</b><small>ရတနာ ၃ ခု ရှာပါ</small></button>
+        <button class="tile" data-game="lights" data-color="#ff9fc4" data-emoji="💡" style="--tc:#ff9fc4"><span class="big">💡</span><b>မီးပိတ်</b><small>ဝါနေတဲ့ မီးအားလုံး ပိတ်ပါ</small></button>
+        <button class="tile" data-game="pattern" data-color="#5fd8cf" data-emoji="🔁" style="--tc:#5fd8cf"><span class="big">🔁</span><b>ပုံစံဆက်</b><small>နောက်ထပ် ပါမယ့်ပုံကို ရွေးပါ</small></button>
+      </div>
+    </div>
+    <div>
+      <h2 class="grp">⚡ လက်မြန်ဂိမ်း</h2>
+      <div class="menu">
+        <button class="tile" data-game="whack" data-color="#ff9b7a" data-emoji="🐹" style="--tc:#ff9b7a"><span class="big">🐹</span><b>တိရစ္ဆာန်ပုတ်</b><small>ပေါ်လာတာကို မြန်မြန်ထိပါ</small></button>
+        <button class="tile" data-game="balloon" data-color="#ffd24d" data-emoji="🎈" style="--tc:#ffd24d"><span class="big">🎈</span><b>ပူဖောင်းပေါက်</b><small>မပျံသွားခင် ထိပေါက်ပါ</small></button>
+        <button class="tile" data-game="snake" data-color="#7ddc9b" data-emoji="🐍" style="--tc:#7ddc9b"><span class="big">🐍</span><b>မြွေစားပန်းသီး</b><small>ပန်းသီးစားပြီး ရှည်လာအောင် လုပ်ပါ</small></button>
+        <button class="tile" data-game="react" data-color="#7cc4ff" data-emoji="🚦" style="--tc:#7cc4ff"><span class="big">🚦</span><b>အမြန်ထိ</b><small>အစိမ်းရောင်ဖြစ်တာနဲ့ ထိပါ</small></button>
+        <button class="tile" data-game="taps" data-color="#ff9fc4" data-emoji="👆" style="--tc:#ff9fc4"><span class="big">👆</span><b>လက်မြန်</b><small>၁၀ စက္ကန့်အတွင်း အကြိမ်များများ ထိပါ</small></button>
+        <button class="tile" data-game="catch" data-color="#5fd8cf" data-emoji="🧺" style="--tc:#5fd8cf"><span class="big">🧺</span><b>ပန်းသီးဖမ်း</b><small>ကျလာတဲ့ ပန်းသီးတွေကို ခြင်းနဲ့ ဖမ်းပါ</small></button>
+      </div>
+    </div>
+    <div>
+      <h2 class="grp">🔢 ဂဏန်းနဲ့ စာသင်</h2>
+      <div class="menu">
+        <button class="tile" data-game="count" data-color="#ff9b7a" data-emoji="🔢" style="--tc:#ff9b7a"><span class="big">🔢</span><b>ဘယ်နှစ်ခုလဲ</b><small>ရေတွက်ပြီး အဖြေရွေးပါ</small></button>
+        <button class="tile" data-game="math" data-color="#ffd24d" data-emoji="➕" style="--tc:#ffd24d"><span class="big">➕</span><b>ပေါင်းနုတ်</b><small>တွက်ပြီး အဖြေရွေးပါ</small></button>
+        <button class="tile" data-game="missing" data-color="#7ddc9b" data-emoji="❓" style="--tc:#7ddc9b"><span class="big">❓</span><b>ပျောက်နေတဲ့ဂဏန်း</b><small>အစီအစဉ်ထဲက ပျောက်တာကို ရွေးပါ</small></button>
+        <button class="tile" data-game="compare" data-color="#7cc4ff" data-emoji="⚖️" style="--tc:#7cc4ff"><span class="big">⚖️</span><b>ပိုကြီးတာရွေး</b><small>ဂဏန်းနှစ်ခုထဲက ရွေးပါ</small></button>
+        <button class="tile" data-game="numtap" data-color="#ff9fc4" data-emoji="🔟" style="--tc:#ff9fc4"><span class="big">🔟</span><b>ဂဏန်းအစီအစဉ်</b><small>၁ ကနေ ၁၂ အထိ အစဉ်လိုက် ထိပါ</small></button>
+        <button class="tile" data-game="colorword" data-color="#5fd8cf" data-emoji="🎨" style="--tc:#5fd8cf"><span class="big">🎨</span><b>အရောင်ရှာ</b><small>အရောင်နာမည်နဲ့ ကိုက်တာ ရွေးပါ</small></button>
+        <button class="tile" data-game="animalname" data-color="#ff9b7a" data-emoji="🦒" style="--tc:#ff9b7a"><span class="big">🦒</span><b>တိရစ္ဆာန်နာမည်</b><small>ပုံကိုကြည့်ပြီး နာမည်ရွေးပါ</small></button>
+      </div>
+    </div>
+    <div>
+      <h2 class="grp">🤝 ဖုန်းနဲ့ ပြိုင်ကစား</h2>
+      <div class="menu">
+        <button class="tile" data-game="ttt" data-color="#ffd24d" data-emoji="⭕" style="--tc:#ffd24d"><span class="big">⭕</span><b>အိုးအက်စ်</b><small>ဖုန်းနဲ့ ပြိုင်ကစားပါ</small></button>
+        <button class="tile" data-game="rps" data-color="#7ddc9b" data-emoji="✊" style="--tc:#7ddc9b"><span class="big">✊</span><b>ကျောက်စက္ကူကတ်ကြေး</b><small>ဖုန်းနဲ့ ပြိုင်ကစားပါ</small></button>
+        <button class="tile" data-game="dice" data-color="#7cc4ff" data-emoji="🎲" style="--tc:#7cc4ff"><span class="big">🎲</span><b>အန်စာတုံးပြိုင်</b><small>အန်စာတုံးပစ်ပြိုင်ပါ</small></button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- memory -->
+  <section id="g-memory" hidden>
+    <div class="levels" role="group" aria-label="အဆင့်ရွေးရန်">
+      <button class="level" data-level="easy" aria-pressed="true">လွယ်<small>6 pairs</small></button>
+      <button class="level" data-level="mid" aria-pressed="false">အလယ်<small>8 pairs</small></button>
+      <button class="level" data-level="hard" aria-pressed="false">ခက်<small>10 pairs</small></button>
+    </div>
+    <div class="stats">
+      <div class="stat"><b id="moves">0</b><span>လှန်ခဲ့သည့်အကြိမ်</span></div>
+      <div class="stat"><b id="pairs">0/6</b><span>တွေ့ပြီး</span></div>
+      <div class="stat"><b id="time">0:00</b><span>အချိန်</span></div>
+    </div>
+    <div class="board" id="board"></div>
+    <p class="best" id="best"></p>
+    <button class="primary" id="restart">အသစ်ပြန်စမယ်</button>
+  </section>
+
+  <!-- whack -->
+  <section id="g-whack" hidden>
+    <div class="stats" style="grid-template-columns: repeat(2, 1fr)">
+      <div class="stat"><b id="wk-score">0</b><span>ထိမိသည့် အကောင်</span></div>
+      <div class="stat"><b id="wk-time">30</b><span>စက္ကန့်</span></div>
+    </div>
+    <div class="holes" id="wk-grid"></div>
+    <p class="best" id="wk-best"></p>
+    <button class="primary" id="wk-restart">အသစ်ပြန်စမယ်</button>
+  </section>
+
+  <!-- count -->
+  <section id="g-count" hidden>
+    <div class="stats" style="grid-template-columns: repeat(2, 1fr)">
+      <div class="stat"><b id="cn-ok">0</b><span>မှန်သည်</span></div>
+      <div class="stat"><b id="cn-total">0</b><span>မေးခဲ့သည်</span></div>
+    </div>
+    <p class="status" id="cn-q">ဘယ်နှစ်ခု ရှိလဲ?</p>
+    <div class="count-box" id="cn-box" aria-live="polite"></div>
+    <div class="choices" id="cn-choices"></div>
+  </section>
+
+  <!-- tic-tac-toe -->
+  <section id="g-ttt" hidden>
+    <div class="stats">
+      <div class="stat"><b id="tt-w">0</b><span>နိုင်</span></div>
+      <div class="stat"><b id="tt-d">0</b><span>သရေ</span></div>
+      <div class="stat"><b id="tt-l">0</b><span>ရှုံး</span></div>
+    </div>
+    <p class="status" id="tt-status"></p>
+    <div class="ttt" id="tt-board"></div>
+    <button class="primary" id="tt-restart">ထပ်ကစားမယ်</button>
+  </section>
+
+  <!-- number order -->
+  <section id="g-numtap" hidden>
+    <div class="stats" style="grid-template-columns: repeat(2, 1fr)">
+      <div class="stat"><b id="nt-next">1</b><span>နောက်ထပ် ထိရမည့် ဂဏန်း</span></div>
+      <div class="stat"><b id="nt-time">0.0</b><span>စက္ကန့်</span></div>
+    </div>
+    <div class="numgrid" id="nt-grid"></div>
+    <p class="best" id="nt-best"></p>
+    <button class="primary" id="nt-restart">အသစ်ပြန်စမယ်</button>
+  </section>
+
+  <!-- odd one out -->
+  <section id="g-odd" hidden>
+    <div class="stats" style="grid-template-columns: repeat(2, 1fr)">
+      <div class="stat"><b id="od-score">0</b><span>ရှာတွေ့သည်</span></div>
+      <div class="stat"><b id="od-time">30</b><span>စက္ကန့်</span></div>
+    </div>
+    <p class="status">တခြားနဲ့ မတူတာကို ထိပါ</p>
+    <div class="oddgrid" id="od-grid"></div>
+    <p class="best" id="od-best"></p>
+    <button class="primary" id="od-restart">အသစ်ပြန်စမယ်</button>
+  </section>
+
+  <!-- math -->
+  <section id="g-math" hidden>
+    <div class="stats" style="grid-template-columns: repeat(2, 1fr)">
+      <div class="stat"><b id="ma-ok">0</b><span>မှန်သည်</span></div>
+      <div class="stat"><b id="ma-total">0</b><span>မေးခဲ့သည်</span></div>
+    </div>
+    <div class="q" id="ma-q" aria-live="polite"></div>
+    <div class="choices" id="ma-choices"></div>
+  </section>
+
+  <!-- rock paper scissors -->
+  <section id="g-rps" hidden>
+    <div class="stats">
+      <div class="stat"><b id="rp-w">0</b><span>နိုင်</span></div>
+      <div class="stat"><b id="rp-d">0</b><span>သရေ</span></div>
+      <div class="stat"><b id="rp-l">0</b><span>ရှုံး</span></div>
+    </div>
+    <div class="arena">
+      <div class="hand"><div id="rp-you">❔</div><span>သင်</span></div>
+      <div class="hand"><div id="rp-cpu">❔</div><span>ဖုန်း</span></div>
+    </div>
+    <p class="status" id="rp-status">တစ်ခုရွေးပါ</p>
+    <div class="choices">
+      <button class="choice" data-h="0" aria-label="ကျောက်"><span>✊</span><small>ကျောက်</small></button>
+      <button class="choice" data-h="1" aria-label="စက္ကူ"><span>✋</span><small>စက္ကူ</small></button>
+      <button class="choice" data-h="2" aria-label="ကတ်ကြေး"><span>✌️</span><small>ကတ်ကြေး</small></button>
+    </div>
+  </section>
+
+  <!-- compare -->
+  <section id="g-compare" hidden>
+    <div class="stats" style="grid-template-columns: repeat(2, 1fr)">
+      <div class="stat"><b id="cp-ok">0</b><span>မှန်သည်</span></div>
+      <div class="stat"><b id="cp-total">0</b><span>မေးခဲ့သည်</span></div>
+    </div>
+    <p class="status" id="cp-q"></p>
+    <div class="choices" id="cp-choices" style="grid-template-columns: repeat(2, 1fr)"></div>
+  </section>
+
+  <!-- snake -->
+  <section id="g-snake" hidden>
+    <div class="stats" style="grid-template-columns: repeat(2, 1fr)">
+      <div class="stat"><b id="sn-score">0</b><span>စားပြီး ပန်းသီး</span></div>
+      <div class="stat"><b id="sn-best">0</b><span>အများဆုံး</span></div>
+    </div>
+    <canvas class="cv" id="sn-cv" width="300" height="300" aria-label="မြွေဂိမ်း"></canvas>
+    <div class="dpad">
+      <span></span><button id="sn-up" aria-label="အပေါ်">▲</button><span></span>
+      <button id="sn-left" aria-label="ဘယ်">◀</button><button id="sn-down" aria-label="အောက်">▼</button><button id="sn-right" aria-label="ညာ">▶</button>
+    </div>
+    <p class="best">ခလုတ်နှိပ်ပါ ဒါမှမဟုတ် ပုံပေါ်မှာ ပွတ်ဆွဲပါ</p>
+    <button class="primary" id="sn-restart">အသစ်ပြန်စမယ်</button>
+  </section>
+
+  <!-- sliding puzzle -->
+  <section id="g-slide" hidden>
+    <div class="stats" style="grid-template-columns: repeat(2, 1fr)">
+      <div class="stat"><b id="sl-moves">0</b><span>ရွှေ့ခဲ့သည့်အကြိမ်</span></div>
+      <div class="stat"><b id="sl-best">-</b><span>အနည်းဆုံး</span></div>
+    </div>
+    <p class="status">၁ ကနေ ၈ အထိ အစဉ်လိုက် စီပါ</p>
+    <div class="sgrid" id="sl-grid"></div>
+    <button class="primary" id="sl-restart">အသစ်ပြန်စမယ်</button>
+  </section>
+
+  <!-- reaction -->
+  <section id="g-react" hidden>
+    <div class="stats" style="grid-template-columns: repeat(2, 1fr)">
+      <div class="stat"><b id="rc-last">-</b><span>နောက်ဆုံး (ms)</span></div>
+      <div class="stat"><b id="rc-best">-</b><span>အမြန်ဆုံး (ms)</span></div>
+    </div>
+    <button class="react" id="rc-btn"></button>
+  </section>
+
+  <!-- treasure -->
+  <section id="g-treasure" hidden>
+    <div class="stats" style="grid-template-columns: repeat(2, 1fr)">
+      <div class="stat"><b id="tr-found">0/3</b><span>တွေ့ပြီး ရတနာ</span></div>
+      <div class="stat"><b id="tr-left">8</b><span>ဖွင့်ခွင့် ကျန်သည်</span></div>
+    </div>
+    <div class="tgrid" id="tr-grid"></div>
+    <button class="primary" id="tr-restart">အသစ်ပြန်စမယ်</button>
+  </section>
+
+  <!-- dice -->
+  <section id="g-dice" hidden>
+    <div class="stats">
+      <div class="stat"><b id="dc-w">0</b><span>နိုင်</span></div>
+      <div class="stat"><b id="dc-d">0</b><span>သရေ</span></div>
+      <div class="stat"><b id="dc-l">0</b><span>ရှုံး</span></div>
+    </div>
+    <div class="arena">
+      <div class="hand"><div class="dice" id="dc-you">⚀⚀</div><span id="dc-you-n">သင်</span></div>
+      <div class="hand"><div class="dice" id="dc-cpu">⚀⚀</div><span id="dc-cpu-n">ဖုန်း</span></div>
+    </div>
+    <p class="status" id="dc-status">ပေါင်းလဒ် ပိုများသူ နိုင်သည်</p>
+    <button class="primary" id="dc-roll">အန်စာတုံးပစ်မယ်</button>
+  </section>
+
+  <!-- missing number -->
+  <section id="g-missing" hidden>
+    <div class="stats" style="grid-template-columns: repeat(2, 1fr)">
+      <div class="stat"><b id="mn-ok">0</b><span>မှန်သည်</span></div>
+      <div class="stat"><b id="mn-total">0</b><span>မေးခဲ့သည်</span></div>
+    </div>
+    <p class="status">ပျောက်နေတဲ့ ဂဏန်းက ဘာလဲ?</p>
+    <div class="q small" id="mn-q" aria-live="polite"></div>
+    <div class="choices" id="mn-choices"></div>
+  </section>
+
+  <!-- lights out -->
+  <section id="g-lights" hidden>
+    <div class="stats" style="grid-template-columns: repeat(2, 1fr)">
+      <div class="stat"><b id="li-moves">0</b><span>နှိပ်ခဲ့သည့်အကြိမ်</span></div>
+      <div class="stat"><b id="li-best">-</b><span>အနည်းဆုံး</span></div>
+    </div>
+    <p class="status">ကွက်ကို နှိပ်ရင် အနားက ကွက်တွေပါ ပြောင်းမယ်။ ဝါနေတာ အားလုံးပိတ်ပါ</p>
+    <div class="sgrid" id="li-grid"></div>
+    <button class="primary" id="li-restart">အသစ်ပြန်စမယ်</button>
+  </section>
+
+  <!-- pattern -->
+  <section id="g-pattern" hidden>
+    <div class="stats" style="grid-template-columns: repeat(2, 1fr)">
+      <div class="stat"><b id="pt-ok">0</b><span>မှန်သည်</span></div>
+      <div class="stat"><b id="pt-total">0</b><span>မေးခဲ့သည်</span></div>
+    </div>
+    <p class="status">နောက်ထပ် ဘာပါမလဲ?</p>
+    <div class="q small" id="pt-q" aria-live="polite"></div>
+    <div class="choices" id="pt-choices"></div>
+  </section>
+
+  <!-- taps -->
+  <section id="g-taps" hidden>
+    <div class="stats" style="grid-template-columns: repeat(2, 1fr)">
+      <div class="stat"><b id="tp-n">0</b><span>ထိခဲ့သည့်အကြိမ်</span></div>
+      <div class="stat"><b id="tp-time">10.0</b><span>စက္ကန့်</span></div>
+    </div>
+    <button class="react" id="tp-btn"></button>
+    <p class="best" id="tp-best"></p>
+    <button class="primary" id="tp-restart">အသစ်ပြန်စမယ်</button>
+  </section>
+
+  <!-- catch -->
+  <section id="g-catch" hidden>
+    <div class="stats" style="grid-template-columns: repeat(2, 1fr)">
+      <div class="stat"><b id="fc-score">0</b><span>ဖမ်းမိသည်</span></div>
+      <div class="stat"><b id="fc-lives">❤️❤️❤️</b><span>အသက်</span></div>
+    </div>
+    <div class="field" id="fc-area"></div>
+    <p class="best" id="fc-best"></p>
+    <button class="primary" id="fc-restart">အသစ်ပြန်စမယ်</button>
+  </section>
+
+  <!-- colour words -->
+  <section id="g-colorword" hidden>
+    <div class="stats" style="grid-template-columns: repeat(2, 1fr)">
+      <div class="stat"><b id="cw-ok">0</b><span>မှန်သည်</span></div>
+      <div class="stat"><b id="cw-total">0</b><span>မေးခဲ့သည်</span></div>
+    </div>
+    <p class="status">ဒီအရောင်ကို ရွေးပါ</p>
+    <div class="q" id="cw-q" aria-live="polite"></div>
+    <div class="choices" id="cw-choices" style="grid-template-columns: repeat(2, 1fr)"></div>
+  </section>
+
+  <!-- animal names -->
+  <section id="g-animalname" hidden>
+    <div class="stats" style="grid-template-columns: repeat(2, 1fr)">
+      <div class="stat"><b id="an-ok">0</b><span>မှန်သည်</span></div>
+      <div class="stat"><b id="an-total">0</b><span>မေးခဲ့သည်</span></div>
+    </div>
+    <p class="status">ဒီတိရစ္ဆာန်ရဲ့ နာမည်က ဘာလဲ?</p>
+    <div class="q huge" id="an-q" aria-live="polite"></div>
+    <div class="choices" id="an-choices"></div>
+  </section>
+
+  <!-- balloons -->
+  <section id="g-balloon" hidden>
+    <div class="stats" style="grid-template-columns: repeat(2, 1fr)">
+      <div class="stat"><b id="bl-score">0</b><span>ပေါက်ပြီး</span></div>
+      <div class="stat"><b id="bl-time">30</b><span>စက္ကန့်</span></div>
+    </div>
+    <div class="sky" id="bl-sky"></div>
+    <p class="best" id="bl-best"></p>
+    <button class="primary" id="bl-restart">အသစ်ပြန်စမယ်</button>
+  </section>
+</main>
+
+<div class="win" id="win" hidden>
+  <div class="win-box" role="dialog" aria-modal="true" aria-labelledby="win-title">
+    <h2 id="win-title">တော်လိုက်တာ!</h2>
+    <div class="stars" id="stars"></div>
+    <p id="win-text"></p>
+    <button class="primary" id="again">ထပ်ဆော့မယ်</button>
+    <button class="icon-btn" id="to-menu">ဂိမ်းစာရင်းသို့</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var ANIMALS = [
+    ['🐶', 'ခွေး'], ['🐱', 'ကြောင်'], ['🐘', 'ဆင်'], ['🐵', 'မျောက်'],
+    ['🐸', 'ဖား'], ['🐼', 'ပန်ဒါ'], ['🦁', 'ခြင်္သေ့'], ['🐰', 'ယုန်'],
+    ['🐯', 'ကျား'], ['🐮', 'နွား'], ['🐷', 'ဝက်'], ['🦊', 'မြေခွေး']
+  ];
+  var soundOn = true, audio = null, current = null, againFn = null;
+  var NAMES = { memory: 'ကတ်တွဲရှာ', slide: 'ဂဏန်းပဟေဠိ', odd: 'မတူတာရှာ', treasure: 'ရတနာရှာ', lights: 'မီးပိတ်', pattern: 'ပုံစံဆက်', whack: 'တိရစ္ဆာန်ပုတ်', balloon: 'ပူဖောင်းပေါက်', snake: 'မြွေစားပန်းသီး', react: 'အမြန်ထိ', taps: 'လက်မြန်', catch: 'ပန်းသီးဖမ်း', count: 'ဘယ်နှစ်ခုလဲ', math: 'ပေါင်းနုတ်', missing: 'ပျောက်နေတဲ့ဂဏန်း', compare: 'ပိုကြီးတာရွေး', numtap: 'ဂဏန်းအစီအစဉ်', colorword: 'အရောင်ရှာ', animalname: 'တိရစ္ဆာန်နာမည်', ttt: 'အိုးအက်စ်', rps: 'ကျောက်စက္ကူကတ်ကြေး', dice: 'အန်စာတုံးပြိုင်' };
+
+  function store(key, val) {
+    try { if (val === undefined) return localStorage.getItem(key); localStorage.setItem(key, val); } catch (e) {}
+    return null;
+  }
+  function beep(freq, dur, type) {
+    if (!soundOn) return;
+    try {
+      audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+      var o = audio.createOscillator(), g = audio.createGain();
+      o.type = type || 'sine'; o.frequency.value = freq; g.gain.value = 0.08;
+      o.connect(g); g.connect(audio.destination);
+      o.start(); g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + dur);
+      o.stop(audio.currentTime + dur);
+    } catch (e) {}
+  }
+  function shuffle(a) {
+    for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; }
+    return a;
+  }
+  function rand(n) { return Math.floor(Math.random() * n); }
+  function fmt(s) { return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); }
+  function saveBest(key, val) {
+    var prev = parseInt(store(key), 10) || 0;
+    if (val > prev) { store(key, String(val)); return true; }
+    return false;
+  }
+  function getBest(key) { return parseInt(store(key), 10) || 0; }
+
+  function showResult(title, n, text, fn) {
+    var s = '';
+    for (var i = 0; i < 3; i++) s += i < n ? '★' : '<span class="off">★</span>';
+    $('win-title').textContent = title;
+    $('stars').innerHTML = s;
+    $('win-text').textContent = text;
+    againFn = fn;
+    $('win').hidden = false;
+    [660, 830, 990, 1320].forEach(function (f, i) { setTimeout(function () { beep(f, 0.22, 'triangle'); }, i * 140); });
+    $('again').focus();
+  }
+
+  /* ---------- navigation ---------- */
+  var G = {};
+  function openGame(id) {
+    stopCurrent();
+    $('menu').hidden = true;
+    Object.keys(NAMES).forEach(function (k) { $('g-' + k).hidden = k !== id; });
+    $('back').hidden = false;
+    var tile = document.querySelector('.tile[data-game="' + id + '"]');
+    $('title').textContent = (tile ? tile.dataset.emoji + ' ' : '') + NAMES[id];
+    $('top').classList.add('ingame'); $('sub').hidden = true;
+    document.body.style.setProperty('--gc', tile ? tile.dataset.color : '');
+    current = id;
+    G[id].start();
+  }
+  function goMenu() {
+    stopCurrent();
+    $('win').hidden = true;
+    Object.keys(NAMES).forEach(function (k) { $('g-' + k).hidden = true; });
+    $('menu').hidden = false;
+    $('back').hidden = true;
+    $('title').textContent = 'ပျော်စရာဂိမ်း';
+    $('top').classList.remove('ingame'); $('sub').hidden = false;
+    document.body.style.removeProperty('--gc');
+    current = null;
+  }
+  function stopCurrent() { if (current && G[current].stop) G[current].stop(); }
+  document.querySelectorAll('.tile').forEach(function (t) { t.addEventListener('click', function () { openGame(t.dataset.game); }); });
+  $('back').addEventListener('click', goMenu);
+  $('to-menu').addEventListener('click', goMenu);
+  $('again').addEventListener('click', function () { $('win').hidden = true; if (againFn) againFn(); });
+  $('sound').addEventListener('click', function () {
+    soundOn = !soundOn; $('sound').setAttribute('aria-pressed', soundOn ? 'true' : 'false');
+  });
+
+  /* ---------- 1. memory ---------- */
+  var LEVELS = { easy: { pairs: 6, cols: 3 }, mid: { pairs: 8, cols: 4 }, hard: { pairs: 10, cols: 4 } };
+  var mem = { level: 'easy', moves: 0, found: 0, open: [], locked: false, timer: null, seconds: 0, started: false, t: [] };
+  function memBest() {
+    var b = getBest('animal-pairs-best-' + mem.level);
+    $('best').textContent = b ? 'ဤအဆင်တွင် အနည်းဆုံး ' + b + ' ကြိမ်ဖြင့် အောင်ဖူးသည်' : 'ဤအဆင်ကို မအောင်ဖူးသေးပါ';
+  }
+  function memStop() { if (mem.timer) { clearInterval(mem.timer); mem.timer = null; } mem.t.forEach(clearTimeout); mem.t = []; }
+  function memStart() {
+    memStop();
+    var cfg = LEVELS[mem.level];
+    mem.moves = 0; mem.found = 0; mem.open = []; mem.locked = false; mem.seconds = 0; mem.started = false;
+    $('moves').textContent = '0'; $('pairs').textContent = '0/' + cfg.pairs; $('time').textContent = '0:00';
+    var board = $('board');
+    board.style.setProperty('--cols', cfg.cols);
+    board.innerHTML = '';
+    var deck = shuffle(shuffle(ANIMALS.slice()).slice(0, cfg.pairs).flatMap(function (a) { return [a, a]; }));
+    deck.forEach(function (a, i) {
+      var b = document.createElement('button');
+      b.className = 'card'; b.type = 'button'; b.dataset.key = a[0];
+      b.setAttribute('aria-label', 'ကတ် ' + (i + 1));
+      b.innerHTML = '<div class="inner"><div class="face back"></div><div class="face front"><span class="emoji">' + a[0] + '</span><span class="name">' + a[1] + '</span></div></div>';
+      b.addEventListener('click', function () { memFlip(b); });
+      board.appendChild(b);
+    });
+    memBest();
+  }
+  function memFlip(card) {
+    if (mem.locked || card.classList.contains('up') || card.classList.contains('done')) return;
+    if (!mem.started) { mem.started = true; mem.timer = setInterval(function () { mem.seconds++; $('time').textContent = fmt(mem.seconds); }, 1000); }
+    card.classList.add('up'); beep(520, 0.12);
+    mem.open.push(card);
+    if (mem.open.length < 2) return;
+    mem.moves++; $('moves').textContent = mem.moves;
+    var a = mem.open[0], b = mem.open[1]; mem.open = [];
+    if (a.dataset.key === b.dataset.key) {
+      mem.found++; $('pairs').textContent = mem.found + '/' + LEVELS[mem.level].pairs;
+      mem.t.push(setTimeout(function () {
+        a.classList.remove('up'); b.classList.remove('up'); a.classList.add('done'); b.classList.add('done');
+        beep(740, 0.15); setTimeout(function () { beep(990, 0.2); }, 120);
+        if (mem.found === LEVELS[mem.level].pairs) memWin();
+      }, 350));
+    } else {
+      mem.locked = true;
+      mem.t.push(setTimeout(function () { a.classList.add('shake'); b.classList.add('shake'); }, 350));
+      mem.t.push(setTimeout(function () { a.classList.remove('up', 'shake'); b.classList.remove('up', 'shake'); mem.locked = false; }, 900));
+    }
+  }
+  function memWin() {
+    if (mem.timer) { clearInterval(mem.timer); mem.timer = null; }
+    var pairs = LEVELS[mem.level].pairs, moves = mem.moves;
+    var n = moves <= pairs + 3 ? 3 : moves <= pairs * 2 ? 2 : 1;
+    var key = 'animal-pairs-best-' + mem.level, prev = getBest(key);
+    var record = !prev || moves < prev;
+    if (record) store(key, String(moves));
+    memBest();
+    mem.t.push(setTimeout(function () {
+      showResult('တော်လိုက်တာ!', n, moves + ' ကြိမ်၊ ' + fmt(mem.seconds) + ' အတွင်း အားလုံးတွေ့ပြီ' + (record ? ' — စံချိန်သစ်!' : ''), memStart);
+    }, 500));
+  }
+  document.querySelectorAll('.level').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      mem.level = btn.dataset.level;
+      document.querySelectorAll('.level').forEach(function (b) { b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'); });
+      memStart();
+    });
+  });
+  $('restart').addEventListener('click', memStart);
+  G.memory = { start: memStart, stop: memStop };
+
+  /* ---------- 2. whack ---------- */
+  var wk = { score: 0, left: 30, tick: null, spawn: null, timers: [], on: false };
+  var CRITTERS = ['🐹', '🐭', '🐰', '🐻', '🐿️'];
+  (function () {
+    var g = $('wk-grid');
+    for (var i = 0; i < 9; i++) {
+      (function () {
+        var h = document.createElement('button');
+        h.className = 'hole'; h.type = 'button'; h.setAttribute('aria-label', 'တွင်း');
+        h.innerHTML = '<span class="critter">🐹</span>';
+        h.addEventListener('pointerdown', function (e) { e.preventDefault(); wkHit(h); });
+        g.appendChild(h);
+      })();
+    }
+  })();
+  function wkStop() {
+    wk.on = false;
+    if (wk.tick) clearInterval(wk.tick); wk.tick = null;
+    if (wk.spawn) clearTimeout(wk.spawn); wk.spawn = null;
+    wk.timers.forEach(clearTimeout); wk.timers = [];
+    document.querySelectorAll('.hole').forEach(function (h) { h.classList.remove('up', 'hit'); });
+  }
+  function wkBest() { var b = getBest('wk-best'); $('wk-best').textContent = b ? 'အမှတ်အများဆုံး ' + b : 'ဤဂိမ်းကို မဆော့ဖူးသေးပါ'; }
+  function wkStart() {
+    wkStop(); wk.score = 0; wk.left = 30; wk.on = true;
+    $('wk-score').textContent = '0'; $('wk-time').textContent = '30'; wkBest();
+    wk.tick = setInterval(function () {
+      wk.left--; $('wk-time').textContent = wk.left;
+      if (wk.left <= 0) wkEnd();
+    }, 1000);
+    wk.spawn = setTimeout(wkSpawn, 500);
+  }
+  function wkSpawn() {
+    if (!wk.on) return;
+    var holes = Array.prototype.slice.call(document.querySelectorAll('.hole')).filter(function (h) { return !h.classList.contains('up'); });
+    var h = holes[rand(holes.length)];
+    h.querySelector('.critter').textContent = CRITTERS[rand(CRITTERS.length)];
+    h.classList.add('up');
+    var progress = (30 - wk.left) / 30;
+    var dur = 1100 - progress * 400 + rand(200);
+    wk.timers.push(setTimeout(function () { h.classList.remove('up'); }, dur));
+    wk.spawn = setTimeout(wkSpawn, 650 - progress * 250 + rand(250));
+  }
+  function wkHit(h) {
+    if (!wk.on || !h.classList.contains('up')) return;
+    h.classList.remove('up'); h.classList.add('hit');
+    wk.timers.push(setTimeout(function () { h.classList.remove('hit'); }, 200));
+    wk.score++; $('wk-score').textContent = wk.score; beep(600 + wk.score * 8, 0.1, 'square');
+  }
+  function wkEnd() {
+    var s = wk.score; wkStop();
+    var rec = saveBest('wk-best', s); wkBest();
+    showResult('အချိန်စေ့ပြီ!', s >= 20 ? 3 : s >= 12 ? 2 : 1, 'စုစုပေါင်း ' + s + ' ကောင် ထိမိသည်' + (rec ? ' — စံချိန်သစ်!' : ''), wkStart);
+  }
+  $('wk-restart').addEventListener('click', wkStart);
+  G.whack = { start: wkStart, stop: wkStop };
+
+  /* ---------- 3. counting ---------- */
+  var cn = { ok: 0, total: 0, lock: false, t: null };
+  var COUNTABLE = ['🍎', '🍌', '🐟', '⭐', '🚗', '🌸', '🐥', '🍓', '🏀'];
+  function cnStop() { if (cn.t) clearTimeout(cn.t); cn.t = null; }
+  function cnStart() { cnStop(); cn.ok = 0; cn.total = 0; $('cn-ok').textContent = '0'; $('cn-total').textContent = '0'; cnNext(); }
+  function cnNext() {
+    cn.lock = false;
+    var n = 1 + rand(9), pic = COUNTABLE[rand(COUNTABLE.length)], html = '';
+    for (var i = 0; i < n; i++) html += '<span>' + pic + '</span>';
+    $('cn-box').innerHTML = html;
+    var opts = [n];
+    while (opts.length < 3) { var x = Math.max(1, Math.min(10, n + rand(5) - 2)); if (opts.indexOf(x) < 0) opts.push(x); }
+    shuffle(opts);
+    var c = $('cn-choices'); c.innerHTML = '';
+    opts.forEach(function (v) {
+      var b = document.createElement('button');
+      b.className = 'choice'; b.type = 'button'; b.textContent = v;
+      b.addEventListener('click', function () { cnPick(b, v, n); });
+      c.appendChild(b);
+    });
+  }
+  function cnPick(btn, v, n) {
+    if (cn.lock) return; cn.lock = true; cn.total++;
+    $('cn-total').textContent = cn.total;
+    if (v === n) { cn.ok++; btn.classList.add('right'); beep(740, 0.15); setTimeout(function () { beep(990, 0.2); }, 120); }
+    else {
+      btn.classList.add('wrong'); beep(200, 0.3, 'sawtooth');
+      Array.prototype.forEach.call($('cn-choices').children, function (b) { if (parseInt(b.textContent, 10) === n) b.classList.add('right'); });
+    }
+    $('cn-ok').textContent = cn.ok;
+    cn.t = setTimeout(cnNext, 1000);
+  }
+  G.count = { start: cnStart, stop: cnStop };
+
+  /* ---------- 4. tic-tac-toe ---------- */
+  var tt = { b: [], over: false, w: 0, d: 0, l: 0, t: null };
+  var LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+  (function () {
+    var g = $('tt-board');
+    for (var i = 0; i < 9; i++) {
+      (function (i) {
+        var c = document.createElement('button');
+        c.className = 'cell'; c.type = 'button'; c.setAttribute('aria-label', 'ကွက် ' + (i + 1));
+        c.addEventListener('click', function () { ttPlayer(i); });
+        g.appendChild(c);
+      })(i);
+    }
+  })();
+  function ttStop() { if (tt.t) clearTimeout(tt.t); tt.t = null; }
+  function ttStart() {
+    ttStop(); tt.b = ['', '', '', '', '', '', '', '', '']; tt.over = false;
+    Array.prototype.forEach.call($('tt-board').children, function (c) { c.textContent = ''; c.className = 'cell'; });
+    $('tt-status').textContent = 'သင့်အလှည့် (❌)';
+    $('tt-w').textContent = tt.w; $('tt-d').textContent = tt.d; $('tt-l').textContent = tt.l;
+  }
+  function ttWinner() {
+    for (var i = 0; i < LINES.length; i++) {
+      var L = LINES[i];
+      if (tt.b[L[0]] && tt.b[L[0]] === tt.b[L[1]] && tt.b[L[1]] === tt.b[L[2]]) return { who: tt.b[L[0]], line: L };
+    }
+    return null;
+  }
+  function ttMark(i, who) {
+    tt.b[i] = who;
+    var c = $('tt-board').children[i];
+    c.textContent = who === 'X' ? '✕' : '◯'; c.classList.add(who === 'X' ? 'x' : 'o');
+    beep(who === 'X' ? 520 : 400, 0.12);
+  }
+  function ttCheck() {
+    var w = ttWinner();
+    if (w) {
+      tt.over = true;
+      w.line.forEach(function (i) { $('tt-board').children[i].classList.add('win'); });
+      if (w.who === 'X') { tt.w++; $('tt-status').textContent = 'သင်နိုင်ပြီ! 🎉'; beep(990, 0.3, 'triangle'); }
+      else { tt.l++; $('tt-status').textContent = 'ဖုန်းနိုင်သွားပြီ။ ထပ်ကစားကြည့်ပါ'; beep(200, 0.35, 'sawtooth'); }
+    } else if (tt.b.indexOf('') < 0) {
+      tt.over = true; tt.d++; $('tt-status').textContent = 'သရေကျသည်';
+    }
+    $('tt-w').textContent = tt.w; $('tt-d').textContent = tt.d; $('tt-l').textContent = tt.l;
+    return tt.over;
+  }
+  function ttPlayer(i) {
+    if (tt.over || tt.b[i] || tt.t) return;
+    ttMark(i, 'X');
+    if (ttCheck()) return;
+    $('tt-status').textContent = 'ဖုန်း စဉ်းစားနေသည်…';
+    tt.t = setTimeout(function () { tt.t = null; ttComputer(); }, 600);
+  }
+  function ttFind(who) {
+    for (var i = 0; i < LINES.length; i++) {
+      var L = LINES[i], vals = L.map(function (k) { return tt.b[k]; });
+      if (vals.filter(function (v) { return v === who; }).length === 2 && vals.indexOf('') >= 0) return L[vals.indexOf('')];
+    }
+    return -1;
+  }
+  function ttComputer() {
+    var m = ttFind('O');
+    if (m < 0 && Math.random() < 0.6) m = ttFind('X');
+    if (m < 0 && !tt.b[4] && Math.random() < 0.7) m = 4;
+    if (m < 0) { var free = []; tt.b.forEach(function (v, i) { if (!v) free.push(i); }); m = free[rand(free.length)]; }
+    ttMark(m, 'O');
+    if (!ttCheck()) $('tt-status').textContent = 'သင့်အလှည့် (❌)';
+  }
+  $('tt-restart').addEventListener('click', ttStart);
+  G.ttt = { start: function () { tt.w = 0; tt.d = 0; tt.l = 0; ttStart(); }, stop: ttStop };
+
+  /* ---------- 5. number order ---------- */
+  var nt = { next: 1, timer: null, started: false, t0: 0 };
+  function ntStop() { if (nt.timer) clearInterval(nt.timer); nt.timer = null; }
+  function ntBest() {
+    var b = parseFloat(store('nt-best'));
+    $('nt-best').textContent = b ? 'အမြန်ဆုံး ' + b.toFixed(1) + ' စက္ကန့်' : 'ဤဂိမ်းကို မဆော့ဖူးသေးပါ';
+  }
+  function ntStart() {
+    ntStop(); nt.next = 1; nt.started = false;
+    $('nt-next').textContent = '1'; $('nt-time').textContent = '0.0';
+    var g = $('nt-grid'); g.innerHTML = '';
+    var nums = []; for (var i = 1; i <= 12; i++) nums.push(i);
+    shuffle(nums).forEach(function (n) {
+      var b = document.createElement('button');
+      b.className = 'num'; b.type = 'button'; b.textContent = n;
+      b.addEventListener('pointerdown', function (e) { e.preventDefault(); ntTap(b, n); });
+      g.appendChild(b);
+    });
+    ntBest();
+  }
+  function ntTap(b, n) {
+    if (b.classList.contains('done')) return;
+    if (n !== nt.next) {
+      beep(200, 0.15, 'sawtooth'); b.classList.add('bad');
+      setTimeout(function () { b.classList.remove('bad'); }, 300);
+      return;
+    }
+    if (!nt.started) {
+      nt.started = true; nt.t0 = Date.now();
+      nt.timer = setInterval(function () { $('nt-time').textContent = ((Date.now() - nt.t0) / 1000).toFixed(1); }, 100);
+    }
+    b.classList.add('done'); beep(500 + n * 40, 0.1);
+    nt.next++;
+    if (nt.next > 12) ntEnd(); else $('nt-next').textContent = nt.next;
+  }
+  function ntEnd() {
+    ntStop();
+    var secs = (Date.now() - nt.t0) / 1000;
+    $('nt-time').textContent = secs.toFixed(1);
+    var prev = parseFloat(store('nt-best'));
+    var rec = !prev || secs < prev;
+    if (rec) store('nt-best', secs.toFixed(1));
+    ntBest();
+    setTimeout(function () {
+      showResult('တော်လိုက်တာ!', secs <= 15 ? 3 : secs <= 25 ? 2 : 1, secs.toFixed(1) + ' စက္ကန့်အတွင်း ပြီးသွားသည်' + (rec ? ' — စံချိန်သစ်!' : ''), ntStart);
+    }, 400);
+  }
+  $('nt-restart').addEventListener('click', ntStart);
+  G.numtap = { start: ntStart, stop: ntStop };
+
+  /* ---------- 6. odd one out ---------- */
+  var od = { score: 0, left: 30, tick: null, on: false };
+  var ODD = [['🐶', '🐺'], ['🍎', '🍅'], ['🌞', '🌕'], ['😀', '😃'], ['🐱', '😺'], ['🚗', '🚕'], ['🍊', '🏀'], ['🐥', '🐤'], ['🐸', '🐢'], ['🌸', '🌺']];
+  function odStop() { od.on = false; if (od.tick) clearInterval(od.tick); od.tick = null; }
+  function odBest() { var b = getBest('od-best'); $('od-best').textContent = b ? 'အမှတ်အများဆုံး ' + b : 'ဤဂိမ်းကို မဆော့ဖူးသေးပါ'; }
+  function odStart() {
+    odStop(); od.score = 0; od.left = 30; od.on = true;
+    $('od-score').textContent = '0'; $('od-time').textContent = '30'; odBest();
+    od.tick = setInterval(function () {
+      od.left--; $('od-time').textContent = od.left;
+      if (od.left <= 0) odEnd();
+    }, 1000);
+    odRound();
+  }
+  function odRound() {
+    var n = Math.min(5, 3 + Math.floor(od.score / 4));
+    var pair = ODD[rand(ODD.length)];
+    if (Math.random() < 0.5) pair = [pair[1], pair[0]];
+    var odd = rand(n * n), g = $('od-grid');
+    g.style.setProperty('--n', n); g.innerHTML = '';
+    for (var i = 0; i < n * n; i++) {
+      (function (isOdd) {
+        var b = document.createElement('button');
+        b.className = 'oc'; b.type = 'button'; b.textContent = isOdd ? pair[1] : pair[0];
+        b.addEventListener('pointerdown', function (e) { e.preventDefault(); odPick(isOdd); });
+        g.appendChild(b);
+      })(i === odd);
+    }
+  }
+  function odPick(ok) {
+    if (!od.on) return;
+    if (ok) { od.score++; $('od-score').textContent = od.score; beep(700, 0.12); odRound(); }
+    else beep(200, 0.15, 'sawtooth');
+  }
+  function odEnd() {
+    var s = od.score; odStop();
+    var rec = saveBest('od-best', s); odBest();
+    showResult('အချိန်စေ့ပြီ!', s >= 12 ? 3 : s >= 7 ? 2 : 1, s + ' ကြိမ် ရှာတွေ့ခဲ့သည်' + (rec ? ' — စံချိန်သစ်!' : ''), odStart);
+  }
+  $('od-restart').addEventListener('click', odStart);
+  G.odd = { start: odStart, stop: odStop };
+
+  /* ---------- 7. math ---------- */
+  var ma = { ok: 0, total: 0, lock: false, t: null };
+  function maStop() { if (ma.t) clearTimeout(ma.t); ma.t = null; }
+  function maStart() { maStop(); ma.ok = 0; ma.total = 0; $('ma-ok').textContent = '0'; $('ma-total').textContent = '0'; maNext(); }
+  function maNext() {
+    ma.lock = false;
+    var a = 1 + rand(10), b = 1 + rand(10), plus = Math.random() < 0.6;
+    if (!plus && b > a) { var t = a; a = b; b = t; }
+    var ans = plus ? a + b : a - b;
+    $('ma-q').textContent = a + (plus ? ' + ' : ' − ') + b + ' = ?';
+    var opts = [ans];
+    while (opts.length < 3) { var x = ans + rand(7) - 3; if (x >= 0 && opts.indexOf(x) < 0) opts.push(x); }
+    shuffle(opts);
+    var c = $('ma-choices'); c.innerHTML = '';
+    opts.forEach(function (v) {
+      var btn = document.createElement('button');
+      btn.className = 'choice'; btn.type = 'button'; btn.textContent = v;
+      btn.addEventListener('click', function () { maPick(btn, v, ans); });
+      c.appendChild(btn);
+    });
+  }
+  function maPick(btn, v, ans) {
+    if (ma.lock) return; ma.lock = true; ma.total++;
+    $('ma-total').textContent = ma.total;
+    if (v === ans) { ma.ok++; btn.classList.add('right'); beep(740, 0.15); setTimeout(function () { beep(990, 0.2); }, 120); }
+    else {
+      btn.classList.add('wrong'); beep(200, 0.3, 'sawtooth');
+      Array.prototype.forEach.call($('ma-choices').children, function (b) { if (parseInt(b.textContent, 10) === ans) b.classList.add('right'); });
+    }
+    $('ma-ok').textContent = ma.ok;
+    ma.t = setTimeout(maNext, 1000);
+  }
+  G.math = { start: maStart, stop: maStop };
+
+  /* ---------- 8. rock paper scissors ---------- */
+  var rp = { w: 0, d: 0, l: 0, lock: false, t: null };
+  var HANDS = [['✊', 'ကျောက်'], ['✋', 'စက္ကူ'], ['✌️', 'ကတ်ကြေး']];
+  function rpStop() { if (rp.t) clearTimeout(rp.t); rp.t = null; rp.lock = false; }
+  function rpShow() { $('rp-w').textContent = rp.w; $('rp-d').textContent = rp.d; $('rp-l').textContent = rp.l; }
+  function rpStart() {
+    rpStop(); rp.w = 0; rp.d = 0; rp.l = 0; rpShow();
+    $('rp-you').textContent = '❔'; $('rp-cpu').textContent = '❔'; $('rp-status').textContent = 'တစ်ခုရွေးပါ';
+  }
+  document.querySelectorAll('#g-rps .choice').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      if (rp.lock) return; rp.lock = true;
+      var p = parseInt(btn.dataset.h, 10);
+      $('rp-you').textContent = HANDS[p][0]; $('rp-cpu').textContent = '❔';
+      $('rp-status').textContent = 'ဖုန်း စဉ်းစားနေသည်…'; beep(450, 0.1);
+      rp.t = setTimeout(function () {
+        var c = rand(3), r = (p - c + 3) % 3;
+        $('rp-cpu').textContent = HANDS[c][0];
+        if (r === 1) { rp.w++; $('rp-status').textContent = HANDS[p][1] + ' က ' + HANDS[c][1] + ' ကို နိုင်သည်! 🎉'; beep(990, 0.25, 'triangle'); }
+        else if (r === 0) { rp.d++; $('rp-status').textContent = 'သရေကျသည်'; beep(520, 0.15); }
+        else { rp.l++; $('rp-status').textContent = HANDS[c][1] + ' က ' + HANDS[p][1] + ' ကို နိုင်သည်'; beep(220, 0.25, 'sawtooth'); }
+        rpShow(); rp.lock = false;
+      }, 600);
+    });
+  });
+  G.rps = { start: rpStart, stop: rpStop };
+
+  /* ---------- 9. compare ---------- */
+  var cp = { ok: 0, total: 0, lock: false, t: null };
+  function cpStop() { if (cp.t) clearTimeout(cp.t); cp.t = null; }
+  function cpStart() { cpStop(); cp.ok = 0; cp.total = 0; $('cp-ok').textContent = '0'; $('cp-total').textContent = '0'; cpNext(); }
+  function cpNext() {
+    cp.lock = false;
+    var a = 1 + rand(20), b = 1 + rand(20);
+    while (b === a) b = 1 + rand(20);
+    var big = Math.random() < 0.5, ans = big ? Math.max(a, b) : Math.min(a, b);
+    $('cp-q').textContent = big ? 'ပိုကြီးတာကို ထိပါ' : 'ပိုသေးတာကို ထိပါ';
+    var c = $('cp-choices'); c.innerHTML = '';
+    [a, b].forEach(function (v) {
+      var btn = document.createElement('button');
+      btn.className = 'choice big'; btn.type = 'button'; btn.textContent = v;
+      btn.addEventListener('click', function () { cpPick(btn, v, ans); });
+      c.appendChild(btn);
+    });
+  }
+  function cpPick(btn, v, ans) {
+    if (cp.lock) return; cp.lock = true; cp.total++;
+    $('cp-total').textContent = cp.total;
+    if (v === ans) { cp.ok++; btn.classList.add('right'); beep(740, 0.15); setTimeout(function () { beep(990, 0.2); }, 120); }
+    else {
+      btn.classList.add('wrong'); beep(200, 0.3, 'sawtooth');
+      Array.prototype.forEach.call($('cp-choices').children, function (b) { if (parseInt(b.textContent, 10) === ans) b.classList.add('right'); });
+    }
+    $('cp-ok').textContent = cp.ok;
+    cp.t = setTimeout(cpNext, 1000);
+  }
+  G.compare = { start: cpStart, stop: cpStop };
+
+  /* ---------- 11. snake ---------- */
+  var sn = { N: 15, S: 20, snake: [], dir: [1, 0], next: [1, 0], apple: [0, 0], score: 0, timer: null, on: false };
+  function cssv(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+  function snStop() { sn.on = false; if (sn.timer) clearInterval(sn.timer); sn.timer = null; }
+  function snPlace() {
+    var x, y;
+    do { x = rand(sn.N); y = rand(sn.N); } while (sn.snake.some(function (s) { return s[0] === x && s[1] === y; }));
+    sn.apple = [x, y];
+  }
+  function snStart() {
+    snStop();
+    sn.snake = [[7, 7], [6, 7], [5, 7]]; sn.dir = [1, 0]; sn.next = [1, 0]; sn.score = 0;
+    $('sn-score').textContent = '0'; $('sn-best').textContent = getBest('sn-best');
+    snPlace(); sn.on = true; snDraw();
+    sn.timer = setInterval(snTick, 190);
+  }
+  function snDir(dx, dy) {
+    if (dx + sn.dir[0] === 0 && dy + sn.dir[1] === 0) return;
+    sn.next = [dx, dy];
+  }
+  function snTick() {
+    if (!sn.on) return;
+    sn.dir = sn.next;
+    var h = sn.snake[0], N = sn.N;
+    var nx = (h[0] + sn.dir[0] + N) % N, ny = (h[1] + sn.dir[1] + N) % N;
+    var eat = nx === sn.apple[0] && ny === sn.apple[1];
+    var body = eat ? sn.snake : sn.snake.slice(0, -1);
+    if (body.some(function (s) { return s[0] === nx && s[1] === ny; })) { snEnd(); return; }
+    sn.snake.unshift([nx, ny]);
+    if (eat) {
+      sn.score++; $('sn-score').textContent = sn.score; beep(700, 0.1, 'square'); snPlace();
+    } else sn.snake.pop();
+    snDraw();
+  }
+  function snDraw() {
+    var ctx = $('sn-cv').getContext('2d'), S = sn.S;
+    ctx.fillStyle = cssv('--surface'); ctx.fillRect(0, 0, 300, 300);
+    ctx.font = '18px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('🍎', sn.apple[0] * S + 10, sn.apple[1] * S + 11);
+    var body = cssv('--card-back'), head = cssv('--accent');
+    sn.snake.forEach(function (s, i) { ctx.fillStyle = i === 0 ? head : body; ctx.fillRect(s[0] * S + 1, s[1] * S + 1, S - 2, S - 2); });
+  }
+  function snEnd() {
+    snStop(); beep(180, 0.4, 'sawtooth');
+    var sc = sn.score, rec = saveBest('sn-best', sc);
+    $('sn-best').textContent = getBest('sn-best');
+    showResult('မြွေ ကိုယ်ကိုယ်ပြန်ကိုက်မိပြီ!', sc >= 10 ? 3 : sc >= 5 ? 2 : 1, 'ပန်းသီး ' + sc + ' လုံး စားခဲ့သည်' + (rec ? ' — စံချိန်သစ်!' : ''), snStart);
+  }
+  $('sn-up').addEventListener('pointerdown', function (e) { e.preventDefault(); snDir(0, -1); });
+  $('sn-down').addEventListener('pointerdown', function (e) { e.preventDefault(); snDir(0, 1); });
+  $('sn-left').addEventListener('pointerdown', function (e) { e.preventDefault(); snDir(-1, 0); });
+  $('sn-right').addEventListener('pointerdown', function (e) { e.preventDefault(); snDir(1, 0); });
+  (function () {
+    var cv = $('sn-cv'), x0 = 0, y0 = 0;
+    cv.addEventListener('pointerdown', function (e) { x0 = e.clientX; y0 = e.clientY; });
+    cv.addEventListener('pointerup', function (e) {
+      var dx = e.clientX - x0, dy = e.clientY - y0;
+      if (Math.max(Math.abs(dx), Math.abs(dy)) < 20) return;
+      if (Math.abs(dx) > Math.abs(dy)) snDir(dx > 0 ? 1 : -1, 0); else snDir(0, dy > 0 ? 1 : -1);
+    });
+  })();
+  document.addEventListener('keydown', function (e) {
+    if (current !== 'snake') return;
+    var m = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] }[e.key];
+    if (m) { e.preventDefault(); snDir(m[0], m[1]); }
+  });
+  $('sn-restart').addEventListener('click', snStart);
+  G.snake = { start: snStart, stop: snStop };
+
+  /* ---------- 12. sliding puzzle ---------- */
+  var sl = { b: [], moves: 0 };
+  function slNb(e) {
+    var r = Math.floor(e / 3), c = e % 3, out = [];
+    if (r > 0) out.push(e - 3); if (r < 2) out.push(e + 3); if (c > 0) out.push(e - 1); if (c < 2) out.push(e + 1);
+    return out;
+  }
+  function slSolved() { return sl.b.every(function (v, i) { return v === (i < 8 ? i + 1 : 0); }); }
+  function slBest() { var b = getBest('sl-best-inv'); $('sl-best').textContent = b ? (1000 - b) : '-'; }
+  function slStart() {
+    sl.b = [1, 2, 3, 4, 5, 6, 7, 8, 0]; sl.moves = 0;
+    do {
+      var e = 8;
+      for (var i = 0; i < 100; i++) {
+        var nb = slNb(e), t = nb[rand(nb.length)];
+        sl.b[e] = sl.b[t]; sl.b[t] = 0; e = t;
+      }
+    } while (slSolved());
+    $('sl-moves').textContent = '0'; slBest(); slRender();
+  }
+  function slRender() {
+    var g = $('sl-grid'); g.innerHTML = '';
+    sl.b.forEach(function (v, i) {
+      var b = document.createElement('button');
+      b.className = 'st' + (v ? '' : ' blank'); b.type = 'button'; b.textContent = v || '';
+      if (!v) b.setAttribute('aria-label', 'ကွက်လပ်');
+      b.addEventListener('click', function () { slTap(i); });
+      g.appendChild(b);
+    });
+  }
+  function slTap(i) {
+    var e = sl.b.indexOf(0);
+    if (slNb(e).indexOf(i) < 0) return;
+    sl.b[e] = sl.b[i]; sl.b[i] = 0; sl.moves++;
+    $('sl-moves').textContent = sl.moves; beep(450, 0.06); slRender();
+    if (slSolved()) {
+      var prev = getBest('sl-best-inv'), rec = saveBest('sl-best-inv', 1000 - sl.moves); slBest();
+      setTimeout(function () {
+        showResult('တော်လိုက်တာ!', sl.moves <= 40 ? 3 : sl.moves <= 80 ? 2 : 1, sl.moves + ' ကြိမ်ရွှေ့ပြီး စီပြီးသွားသည်' + (rec ? ' — စံချိန်သစ်!' : ''), slStart);
+      }, 400);
+    }
+  }
+  $('sl-restart').addEventListener('click', slStart);
+  G.slide = { start: slStart, stop: function () {} };
+
+  /* ---------- 13. reaction ---------- */
+  var rc = { state: 'idle', t: null, t0: 0 };
+  function rcIdle(msg) { rc.state = 'idle'; $('rc-btn').className = 'react'; $('rc-btn').textContent = msg; }
+  function rcStop() { if (rc.t) clearTimeout(rc.t); rc.t = null; rc.state = 'idle'; }
+  function rcStart() { rcStop(); rcIdle('စတင်ရန် ထိပါ'); var b = parseInt(store('rc-best'), 10); $('rc-best').textContent = b || '-'; $('rc-last').textContent = '-'; }
+  $('rc-btn').addEventListener('pointerdown', function (e) {
+    e.preventDefault();
+    var btn = $('rc-btn');
+    if (rc.state === 'idle') {
+      rc.state = 'wait'; btn.className = 'react wait'; btn.textContent = 'စောင့်ပါ…\nအစိမ်းရောင် ဖြစ်မှ ထိပါ';
+      rc.t = setTimeout(function () {
+        rc.state = 'go'; btn.className = 'react go'; btn.textContent = 'ယခု ထိပါ!'; rc.t0 = Date.now(); beep(880, 0.15);
+      }, 1500 + rand(2500));
+    } else if (rc.state === 'wait') {
+      if (rc.t) clearTimeout(rc.t); rc.t = null; beep(200, 0.2, 'sawtooth');
+      rcIdle('စောလွန်းတယ်!\nထပ်စမ်းရန် ထိပါ');
+    } else if (rc.state === 'go') {
+      var ms = Date.now() - rc.t0;
+      $('rc-last').textContent = ms;
+      var prev = parseInt(store('rc-best'), 10);
+      var rec = !prev || ms < prev;
+      if (rec) { store('rc-best', String(ms)); $('rc-best').textContent = ms; }
+      beep(660, 0.15, 'triangle');
+      rcIdle(ms + ' မီလီစက္ကန့်' + (rec ? '\nစံချိန်သစ်! 🎉' : '') + '\nထပ်စမ်းရန် ထိပါ');
+    }
+  });
+  G.react = { start: rcStart, stop: rcStop };
+
+  /* ---------- 14. treasure ---------- */
+  var tr = { gems: [], opened: [], found: 0, left: 8, over: false, t: null };
+  function trStop() { if (tr.t) clearTimeout(tr.t); tr.t = null; }
+  function trShow() { $('tr-found').textContent = tr.found + '/3'; $('tr-left').textContent = tr.left; }
+  function trStart() {
+    trStop();
+    var all = []; for (var i = 0; i < 16; i++) all.push(i);
+    tr.gems = shuffle(all).slice(0, 3); tr.opened = []; tr.found = 0; tr.left = 8; tr.over = false; trShow();
+    var g = $('tr-grid'); g.innerHTML = '';
+    for (var k = 0; k < 16; k++) {
+      (function (k) {
+        var b = document.createElement('button');
+        b.className = 'tb'; b.type = 'button'; b.textContent = '📦'; b.setAttribute('aria-label', 'သေတ္တာ ' + (k + 1));
+        b.addEventListener('click', function () { trTap(b, k); });
+        g.appendChild(b);
+      })(k);
+    }
+  }
+  function trTap(b, k) {
+    if (tr.over || tr.opened.indexOf(k) >= 0) return;
+    tr.opened.push(k); tr.left--; b.classList.add('open');
+    if (tr.gems.indexOf(k) >= 0) { tr.found++; b.textContent = '💎'; beep(990, 0.2, 'triangle'); }
+    else { b.textContent = '🍃'; beep(300, 0.12); }
+    trShow();
+    if (tr.found === 3) {
+      tr.over = true; var used = 8 - tr.left;
+      tr.t = setTimeout(function () { showResult('ရတနာအားလုံး တွေ့ပြီ!', used <= 5 ? 3 : used <= 7 ? 2 : 1, 'ဖွင့်ခွင့် ' + used + ' ကြိမ်ဖြင့် ရတနာ ၃ ခု ရှာတွေ့သည်', trStart); }, 500);
+    } else if (tr.left === 0) {
+      tr.over = true;
+      Array.prototype.forEach.call($('tr-grid').children, function (btn, i) {
+        if (tr.gems.indexOf(i) >= 0 && tr.opened.indexOf(i) < 0) { btn.textContent = '💎'; btn.classList.add('open'); }
+      });
+      tr.t = setTimeout(function () { showResult('နောက်တစ်ကြိမ် ကြိုးစားပါ', 0, 'ရတနာ ' + tr.found + ' ခု တွေ့ခဲ့သည်', trStart); }, 1200);
+    }
+  }
+  $('tr-restart').addEventListener('click', trStart);
+  G.treasure = { start: trStart, stop: trStop };
+
+  /* ---------- 15. dice ---------- */
+  var dc = { w: 0, d: 0, l: 0, lock: false, t: null, iv: null };
+  var FACES = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+  function dcStop() { if (dc.t) clearTimeout(dc.t); if (dc.iv) clearInterval(dc.iv); dc.t = null; dc.iv = null; dc.lock = false; }
+  function dcShow() { $('dc-w').textContent = dc.w; $('dc-d').textContent = dc.d; $('dc-l').textContent = dc.l; }
+  function dcStart() {
+    dcStop(); dc.w = 0; dc.d = 0; dc.l = 0; dcShow();
+    $('dc-you').textContent = '⚀⚀'; $('dc-cpu').textContent = '⚀⚀';
+    $('dc-you-n').textContent = 'သင်'; $('dc-cpu-n').textContent = 'ဖုန်း';
+    $('dc-status').textContent = 'ပေါင်းလဒ် ပိုများသူ နိုင်သည်';
+  }
+  $('dc-roll').addEventListener('click', function () {
+    if (dc.lock) return; dc.lock = true;
+    $('dc-status').textContent = 'လိမ့်နေသည်…';
+    dc.iv = setInterval(function () {
+      $('dc-you').textContent = FACES[rand(6)] + FACES[rand(6)];
+      $('dc-cpu').textContent = FACES[rand(6)] + FACES[rand(6)];
+      beep(300 + rand(200), 0.04, 'square');
+    }, 90);
+    dc.t = setTimeout(function () {
+      clearInterval(dc.iv); dc.iv = null;
+      var a = rand(6), b = rand(6), c = rand(6), d = rand(6);
+      $('dc-you').textContent = FACES[a] + FACES[b]; $('dc-cpu').textContent = FACES[c] + FACES[d];
+      var ys = a + b + 2, cs = c + d + 2;
+      $('dc-you-n').textContent = 'သင် — ' + ys; $('dc-cpu-n').textContent = 'ဖုန်း — ' + cs;
+      if (ys > cs) { dc.w++; $('dc-status').textContent = 'သင်နိုင်ပြီ! 🎉'; beep(990, 0.25, 'triangle'); }
+      else if (ys === cs) { dc.d++; $('dc-status').textContent = 'သရေကျသည်'; beep(520, 0.15); }
+      else { dc.l++; $('dc-status').textContent = 'ဖုန်းနိုင်သွားပြီ။ ထပ်ပစ်ကြည့်ပါ'; beep(220, 0.25, 'sawtooth'); }
+      dcShow(); dc.lock = false;
+    }, 900);
+  });
+  G.dice = { start: dcStart, stop: dcStop };
+
+  /* ---------- 16. missing number ---------- */
+  var mn = { ok: 0, total: 0, lock: false, t: null };
+  function mnStop() { if (mn.t) clearTimeout(mn.t); mn.t = null; }
+  function mnStart() { mnStop(); mn.ok = 0; mn.total = 0; $('mn-ok').textContent = '0'; $('mn-total').textContent = '0'; mnNext(); }
+  function mnNext() {
+    mn.lock = false;
+    var step = Math.random() < 0.2 ? 10 : 1 + rand(5), start = 1 + rand(10), seq = [];
+    for (var i = 0; i < 5; i++) seq.push(start + i * step);
+    var hide = rand(5), ans = seq[hide];
+    $('mn-q').textContent = seq.map(function (v, i) { return i === hide ? '?' : v; }).join('  ,  ');
+    var pool = [ans + step, ans - step, ans + 1, ans - 1, ans + 2].filter(function (x) { return x > 0 && x !== ans; });
+    var opts = [ans].concat(shuffle(pool).slice(0, 2));
+    shuffle(opts);
+    var c = $('mn-choices'); c.innerHTML = '';
+    opts.forEach(function (v) {
+      var btn = document.createElement('button');
+      btn.className = 'choice'; btn.type = 'button'; btn.textContent = v;
+      btn.addEventListener('click', function () { mnPick(btn, v, ans); });
+      c.appendChild(btn);
+    });
+  }
+  function mnPick(btn, v, ans) {
+    if (mn.lock) return; mn.lock = true; mn.total++;
+    $('mn-total').textContent = mn.total;
+    if (v === ans) { mn.ok++; btn.classList.add('right'); beep(740, 0.15); setTimeout(function () { beep(990, 0.2); }, 120); }
+    else {
+      btn.classList.add('wrong'); beep(200, 0.3, 'sawtooth');
+      Array.prototype.forEach.call($('mn-choices').children, function (b) { if (parseInt(b.textContent, 10) === ans) b.classList.add('right'); });
+    }
+    $('mn-ok').textContent = mn.ok;
+    mn.t = setTimeout(mnNext, 1100);
+  }
+  G.missing = { start: mnStart, stop: mnStop };
+
+  /* ---------- 17. lights out ---------- */
+  var li = { on: [], moves: 0 };
+  function liBest() { var b = getBest('li-best-inv'); $('li-best').textContent = b ? (1000 - b) : '-'; }
+  function liPress(i) {
+    var r = Math.floor(i / 3), c = i % 3;
+    [[r, c], [r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]].forEach(function (p) {
+      if (p[0] >= 0 && p[0] < 3 && p[1] >= 0 && p[1] < 3) { var k = p[0] * 3 + p[1]; li.on[k] = !li.on[k]; }
+    });
+  }
+  function liStart() {
+    li.moves = 0;
+    do {
+      li.on = [false, false, false, false, false, false, false, false, false];
+      for (var n = 0; n < 6; n++) liPress(rand(9));
+    } while (li.on.every(function (v) { return !v; }));
+    $('li-moves').textContent = '0'; liBest(); liRender();
+  }
+  function liRender() {
+    var g = $('li-grid'); g.innerHTML = '';
+    li.on.forEach(function (v, i) {
+      var b = document.createElement('button');
+      b.className = 'lc' + (v ? ' on' : ''); b.type = 'button'; b.setAttribute('aria-label', v ? 'မီးလင်း' : 'မီးပိတ်');
+      b.addEventListener('click', function () { liTap(i); });
+      g.appendChild(b);
+    });
+  }
+  function liTap(i) {
+    liPress(i); li.moves++; $('li-moves').textContent = li.moves; beep(480, 0.07); liRender();
+    if (li.on.every(function (v) { return !v; })) {
+      var rec = saveBest('li-best-inv', 1000 - li.moves); liBest();
+      setTimeout(function () {
+        showResult('မီးအားလုံး ပိတ်ပြီ!', li.moves <= 8 ? 3 : li.moves <= 15 ? 2 : 1, li.moves + ' ကြိမ်နှိပ်ပြီး ပြီးသွားသည်' + (rec ? ' — စံချိန်သစ်!' : ''), liStart);
+      }, 400);
+    }
+  }
+  $('li-restart').addEventListener('click', liStart);
+  G.lights = { start: liStart, stop: function () {} };
+
+  /* ---------- quiz helper (pattern, colour words, animal names) ---------- */
+  function makeQuiz(p, gen) {
+    var q = { ok: 0, total: 0, lock: false, t: null };
+    function stop() { if (q.t) clearTimeout(q.t); q.t = null; }
+    function next() {
+      q.lock = false;
+      var r = gen();
+      $(p + '-q').textContent = r.q;
+      var box = $(p + '-choices'); box.innerHTML = '';
+      r.opts.forEach(function (o) {
+        var b = document.createElement('button');
+        b.className = 'choice' + (o.bg ? ' sw' : '') + (o.txt ? ' txt' : ''); b.type = 'button'; b.dataset.v = o.v;
+        if (o.bg) { b.style.background = o.bg; b.setAttribute('aria-label', o.label); } else b.textContent = o.label;
+        b.addEventListener('click', function () { pick(b, o.v, r.ans); });
+        box.appendChild(b);
+      });
+    }
+    function pick(btn, v, ans) {
+      if (q.lock) return; q.lock = true; q.total++;
+      $(p + '-total').textContent = q.total;
+      if (v === ans) { q.ok++; btn.classList.add('right'); beep(740, 0.15); setTimeout(function () { beep(990, 0.2); }, 120); }
+      else {
+        btn.classList.add('wrong'); beep(200, 0.3, 'sawtooth');
+        Array.prototype.forEach.call($(p + '-choices').children, function (b) { if (b.dataset.v === ans) b.classList.add('right'); });
+      }
+      $(p + '-ok').textContent = q.ok;
+      q.t = setTimeout(next, 1100);
+    }
+    return {
+      start: function () { stop(); q.ok = 0; q.total = 0; $(p + '-ok').textContent = '0'; $(p + '-total').textContent = '0'; next(); },
+      stop: stop
+    };
+  }
+
+  /* ---------- 18. pattern ---------- */
+  var SYM = ['🍎', '🍌', '🐟', '⭐', '🌸', '🚗', '🐥', '🍓'];
+  function patGen() {
+    var sy = shuffle(SYM.slice()), a = sy[0], b = sy[1], c = sy[2], t = rand(3);
+    var base = t === 0 ? [a, b] : t === 1 ? [a, a, b] : [a, b, c], seq = [];
+    for (var i = 0; i < 7; i++) seq.push(base[i % base.length]);
+    var ans = base[7 % base.length], opts = [ans];
+    sy.forEach(function (x) { if (opts.length < 3 && opts.indexOf(x) < 0) opts.push(x); });
+    shuffle(opts);
+    return { q: seq.join('  ') + '  ?', opts: opts.map(function (v) { return { v: v, label: v }; }), ans: ans };
+  }
+  G.pattern = makeQuiz('pt', patGen);
+
+  /* ---------- 19. taps ---------- */
+  var tp = { n: 0, iv: null, started: false, fin: false, t0: 0 };
+  function tpStop() { if (tp.iv) clearInterval(tp.iv); tp.iv = null; }
+  function tpBest() { var b = getBest('tp-best'); $('tp-best').textContent = b ? 'အများဆုံး ' + b + ' ကြိမ်' : 'ဤဂိမ်းကို မဆော့ဖူးသေးပါ'; }
+  function tpStart() {
+    tpStop(); tp.n = 0; tp.started = false; tp.fin = false;
+    $('tp-n').textContent = '0'; $('tp-time').textContent = '10.0';
+    $('tp-btn').textContent = 'ဒီခလုတ်ကို\nဆက်တိုက် ထိပါ!'; tpBest();
+  }
+  $('tp-btn').addEventListener('pointerdown', function (e) {
+    e.preventDefault();
+    if (tp.fin) return;
+    if (!tp.started) {
+      tp.started = true; tp.t0 = Date.now(); $('tp-btn').textContent = 'ထိပါ! ထိပါ!';
+      tp.iv = setInterval(function () {
+        var left = Math.max(0, 10 - (Date.now() - tp.t0) / 1000);
+        $('tp-time').textContent = left.toFixed(1);
+        if (left <= 0) tpEnd();
+      }, 100);
+    }
+    tp.n++; $('tp-n').textContent = tp.n; beep(300 + (tp.n % 20) * 15, 0.03, 'square');
+  });
+  function tpEnd() {
+    tpStop(); tp.fin = true;
+    var n = tp.n, rec = saveBest('tp-best', n); tpBest();
+    showResult('အချိန်စေ့ပြီ!', n >= 50 ? 3 : n >= 35 ? 2 : 1, '၁၀ စက္ကန့်အတွင်း ' + n + ' ကြိမ် ထိခဲ့သည်' + (rec ? ' — စံချိန်သစ်!' : ''), tpStart);
+  }
+  $('tp-restart').addEventListener('click', tpStart);
+  G.taps = { start: tpStart, stop: tpStop };
+
+  /* ---------- 20. fruit catch ---------- */
+  var fc = { score: 0, lives: 3, fruits: [], on: false, raf: null, spawn: null, x: 0.5, last: 0, basket: null };
+  var FRUITS = ['🍎', '🍌', '🍊', '🍇', '🍓', '🍐'];
+  function fcStop() {
+    fc.on = false;
+    if (fc.raf) cancelAnimationFrame(fc.raf); fc.raf = null;
+    if (fc.spawn) clearTimeout(fc.spawn); fc.spawn = null;
+  }
+  function fcBest() { var b = getBest('fc-best'); $('fc-best').textContent = b ? 'အများဆုံး ' + b + ' လုံး' : 'ဤဂိမ်းကို မဆော့ဖူးသေးပါ'; }
+  function fcHearts() { var h = ''; for (var i = 0; i < fc.lives; i++) h += '❤️'; $('fc-lives').textContent = h || '💔'; }
+  function fcStart() {
+    fcStop();
+    var area = $('fc-area'); area.innerHTML = '';
+    fc.basket = document.createElement('div'); fc.basket.className = 'basket'; fc.basket.textContent = '🧺';
+    fc.x = 0.5; fc.basket.style.left = '50%'; area.appendChild(fc.basket);
+    fc.fruits = []; fc.score = 0; fc.lives = 3; fc.last = 0; fc.on = true;
+    $('fc-score').textContent = '0'; fcHearts(); fcBest();
+    fcSpawn(); fc.raf = requestAnimationFrame(fcFrame);
+  }
+  function fcSpawn() {
+    if (!fc.on) return;
+    var el = document.createElement('span');
+    el.className = 'fruit'; el.textContent = FRUITS[rand(FRUITS.length)];
+    var f = { el: el, x: 0.08 + Math.random() * 0.84, y: -40, k: 0.85 + Math.random() * 0.3 };
+    el.style.left = (f.x * 100) + '%'; el.style.transform = 'translate(-50%, -40px)';
+    $('fc-area').appendChild(el); fc.fruits.push(f);
+    fc.spawn = setTimeout(fcSpawn, Math.max(380, 950 - fc.score * 14));
+  }
+  function fcFrame(ts) {
+    if (!fc.on) return;
+    var H = $('fc-area').clientHeight, dt = fc.last ? Math.min(0.05, (ts - fc.last) / 1000) : 0;
+    fc.last = ts;
+    var v = Math.min(420, 170 + fc.score * 7);
+    for (var i = fc.fruits.length - 1; i >= 0; i--) {
+      var f = fc.fruits[i];
+      f.y += v * dt * f.k;
+      var gone = false;
+      if (f.y >= H - 70 && Math.abs(f.x - fc.x) <= 0.14) {
+        fc.score++; $('fc-score').textContent = fc.score; beep(700 + Math.min(fc.score, 20) * 10, 0.08, 'square'); gone = true;
+      } else if (f.y >= H - 30) {
+        fc.lives--; fcHearts(); beep(200, 0.2, 'sawtooth'); gone = true;
+      }
+      if (gone) { f.el.remove(); fc.fruits.splice(i, 1); }
+      else f.el.style.transform = 'translate(-50%, ' + f.y + 'px)';
+    }
+    if (fc.lives <= 0) { fcEnd(); return; }
+    fc.raf = requestAnimationFrame(fcFrame);
+  }
+  function fcEnd() {
+    var sc = fc.score; fcStop();
+    var rec = saveBest('fc-best', sc); fcBest();
+    showResult('ပြီးသွားပြီ!', sc >= 20 ? 3 : sc >= 10 ? 2 : 1, 'ပန်းသီး ' + sc + ' လုံး ဖမ်းမိသည်' + (rec ? ' — စံချိန်သစ်!' : ''), fcStart);
+  }
+  (function () {
+    var area = $('fc-area');
+    function move(e) {
+      var r = area.getBoundingClientRect();
+      fc.x = Math.min(0.92, Math.max(0.08, (e.clientX - r.left) / r.width));
+      if (fc.basket) fc.basket.style.left = (fc.x * 100) + '%';
+    }
+    area.addEventListener('pointerdown', move);
+    area.addEventListener('pointermove', move);
+  })();
+  $('fc-restart').addEventListener('click', fcStart);
+  G.catch = { start: fcStart, stop: fcStop };
+
+  /* ---------- 21. colour words ---------- */
+  var COLORS = [['အနီ', '#e5484d'], ['အပြာ', '#3e63dd'], ['အစိမ်း', '#30a46c'], ['အဝါ', '#f5d90a'], ['လိမ္မော်', '#ff8a3d'], ['ပန်းရောင်', '#ff7eb6'], ['ခရမ်း', '#8e4ec6'], ['အနက်', '#1a1a1a'], ['အဖြူ', '#ffffff']];
+  function cwGen() {
+    var c = COLORS[rand(COLORS.length)], opts = [c];
+    while (opts.length < 4) { var x = COLORS[rand(COLORS.length)]; if (opts.indexOf(x) < 0) opts.push(x); }
+    shuffle(opts);
+    return { q: c[0], opts: opts.map(function (o) { return { v: o[0], label: o[0], bg: o[1] }; }), ans: c[0] };
+  }
+  G.colorword = makeQuiz('cw', cwGen);
+
+  /* ---------- 22. animal names ---------- */
+  function anGen() {
+    var a = ANIMALS[rand(ANIMALS.length)], opts = [a];
+    while (opts.length < 3) { var x = ANIMALS[rand(ANIMALS.length)]; if (opts.indexOf(x) < 0) opts.push(x); }
+    shuffle(opts);
+    return { q: a[0], opts: opts.map(function (o) { return { v: o[1], label: o[1], txt: true }; }), ans: a[1] };
+  }
+  G.animalname = makeQuiz('an', anGen);
+
+  /* ---------- 10. balloons ---------- */
+  var bl = { score: 0, left: 30, tick: null, spawn: null, on: false };
+  function blStop() {
+    bl.on = false;
+    if (bl.tick) clearInterval(bl.tick); bl.tick = null;
+    if (bl.spawn) clearTimeout(bl.spawn); bl.spawn = null;
+    $('bl-sky').innerHTML = '';
+  }
+  function blBest() { var b = getBest('bl-best'); $('bl-best').textContent = b ? 'အမှတ်အများဆုံး ' + b : 'ဤဂိမ်းကို မဆော့ဖူးသေးပါ'; }
+  function blStart() {
+    blStop(); bl.score = 0; bl.left = 30; bl.on = true;
+    $('bl-score').textContent = '0'; $('bl-time').textContent = '30'; blBest();
+    bl.tick = setInterval(function () {
+      bl.left--; $('bl-time').textContent = bl.left;
+      if (bl.left <= 0) blEnd();
+    }, 1000);
+    blSpawn();
+  }
+  function blSpawn() {
+    if (!bl.on) return;
+    var sky = $('bl-sky'), b = document.createElement('button');
+    b.className = 'balloon'; b.type = 'button'; b.setAttribute('aria-label', 'ပူဖောင်း');
+    b.style.left = (4 + Math.random() * 78) + '%';
+    b.style.background = 'hsl(' + rand(360) + ', 75%, 58%)';
+    b.style.animationDuration = (4 + Math.random() * 2.5) + 's';
+    b.addEventListener('pointerdown', function (e) {
+      e.preventDefault();
+      if (!bl.on || !b.parentNode) return;
+      b.remove(); bl.score++; $('bl-score').textContent = bl.score; beep(500 + rand(500), 0.08, 'square');
+    });
+    b.addEventListener('animationend', function () { b.remove(); });
+    sky.appendChild(b);
+    bl.spawn = setTimeout(blSpawn, 450 + rand(350));
+  }
+  function blEnd() {
+    var s = bl.score; blStop();
+    var rec = saveBest('bl-best', s); blBest();
+    showResult('အချိန်စေ့ပြီ!', s >= 20 ? 3 : s >= 12 ? 2 : 1, 'ပူဖောင်း ' + s + ' လုံး ပေါက်ခဲ့သည်' + (rec ? ' — စံချိန်သစ်!' : ''), blStart);
+  }
+  $('bl-restart').addEventListener('click', blStart);
+  G.balloon = { start: blStart, stop: blStop };
+})();
+</script>
+
+</body></html>
